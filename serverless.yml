@@ -1,0 +1,63 @@
+service: where-its-at-dynamo-ts
+frameworkVersion: '3'
+
+provider:
+  name: aws
+  runtime: nodejs18.x
+  profile: renas
+  region: eu-north-1
+  iam:
+    role: arn:aws:iam::111041186627:role/lecturerole
+  deploymentMethod: direct
+
+plugins:
+  - serverless-webpack
+
+package:
+  individually: true
+
+functions:
+  getEvents:
+    handler: functions/getEvents/index.handler
+    events:
+      - httpApi:
+          path: '/api/events'
+          method: GET
+  orderTicket:
+    handler: functions/orderTicket/index.handler
+    events:
+      - httpApi:
+          path: '/api/events/{eventId}'
+          method: POST
+  verifyTicket:
+    handler: functions/verifyTicket/index.handler
+    events:
+      - httpApi:
+          path: '/api/tickets/{ticketId}'
+          method: PUT
+
+resources:
+  Resources:
+    EventsTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        TableName: events
+        AttributeDefinitions:
+          - AttributeName: id
+            AttributeType: S
+        KeySchema:
+          - AttributeName: id
+            KeyType: HASH
+        BillingMode: PAY_PER_REQUEST
+
+    TicketsTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        TableName: tickets
+        AttributeDefinitions:
+          - AttributeName: id
+            AttributeType: S
+        KeySchema:
+          - AttributeName: id
+            KeyType: HASH
+        BillingMode: PAY_PER_REQUEST
